@@ -182,12 +182,17 @@ The `/api/match/{id}/predict` endpoint loads the trained model, accepts match da
 - ✓ Project directory structure created (src/{api,ml,scraper,clients,db,static}, data, models, docker, tests)
 - ✓ `.env.template` created with database and API configuration placeholders
 - ✓ `pyproject.toml` created with all core dependencies (FastAPI, pandas, scikit-learn, etc.)
+- ✓ `Dockerfile` created with multi-stage build and security best practices
+- ✓ `docker-compose.yml` created with PostgreSQL and FastAPI services
 
 **In Progress:**
-- Dockerfile for Python application
-- docker-compose.yml for service orchestration
 - Initial Python module structure (__init__.py files)
 - Tailwind CSS build configuration
+
+**Pending:**
+- Database schema design (Phase 2)
+- Web scraper implementation (Phase 2)
+- API endpoints implementation (Phase 3)
 
 ## Development Notes
 
