@@ -1,0 +1,24 @@
+{
+  "name": "soccer-prediction",
+  "version": "0.1.0",
+  "description": "Machine learning-based football match prediction system",
+  "main": "src/static/index.html",
+  "type": "module",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/static/css/input.css -o ./src/static/css/output.css --minify",
+    "watch:css": "tailwindcss -i ./src/static/css/input.css -o ./src/static/css/output.css --watch",
+    "dev": "npm run watch:css"
+  },
+  "keywords": [
+    "soccer",
+    "prediction",
+    "machine-learning",
+    "football"
+  ],
+  "author": "Bogdan",
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^3.3.0",
+    "postcss": "^8.4.31"
+  }
+}
