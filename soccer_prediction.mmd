@@ -1,0 +1,78 @@
+flowchart TD
+%% Define subgraph for System lane
+subgraph Sistem
+D[Preluare Date Meci]
+E{Date Meci Găsite?}
+G[Formatare Listă Meciuri]
+H[Afișare Listă Meciuri]
+I[Eroare: Nu S-au Găsit Meciuri]
+J[Preluare Metrică Avansată & Cote]
+L{Date Avansate Găsite?}
+M[Formatare & Calcul Analiză]
+N[Afișare Analiză Detaliată]
+O[Eroare: Metricile/Cotele Indisponibile]
+P[Script ML: Analiză & Generare Predicție]
+Q{Predicție Generată?}
+R[Afișare Predicție Finală]
+S[Eroare: Script Predicție Eșuat]
+T[Salvare Predicție în Bază]
+V{Salvare Reușită?}
+W[Afișare Confirmare Salvare]
+X[Afișare Eroare Salvare]
+Z_END((END))
+end
+
+%% Define subgraph for History/Performance lane
+subgraph "Istoric & Performanță"
+Y[Preluare Istoric Predicții]
+Z{Date Istoric Găsite?}
+AA[Calculează Acuratețea/Profitul]
+BB[Afișare Tablou de Bord Istoric]
+CC[Eroare: Istoric Indisponibil]
+end
+
+%% Define standalone nodes
+A[Start]
+B[Selectare Țară/Competiție]
+C[Selectare Dată]
+F[Selectare Meci]
+K[Validare Analiză]
+U[Utilizator]
+
+%% Define connections
+A --> B
+B --> C
+C --> D
+D --> E
+E -- DA --> G
+E -- NU --> I
+G --> H
+H --> F
+I --> B
+F --> J
+J --> L
+L -- DA --> M
+L -- NU --> O
+M --> N
+N --> K
+O --> H
+K --> P
+P --> Q
+Q -- DA --> R
+Q -- NU --> S
+R --> T
+S --> N
+T --> V
+V -- DA --> W
+V -- NU --> X
+W --> U
+X --> R
+
+%% History Connections
+U --> Y
+Y --> Z
+Z -- DA --> AA
+Z -- NU --> CC
+AA --> BB
+CC --> BB
+BB --> Z_END
