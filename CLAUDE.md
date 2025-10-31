@@ -1,0 +1,200 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+The Soccer Prediction application is a data-driven machine learning system that predicts football match outcomes. It combines data scraping (fbref.com), external APIs (football-data.org, api-football.com), advanced statistical analysis, and ML predictions. The application includes a web-based frontend for league/match selection, prediction generation, and historical performance tracking.
+
+**Key workflow**: User selects league/period → System fetches matches → User selects match → Detailed metrics retrieved → ML model generates prediction → User saves prediction → System tracks prediction accuracy.
+
+## Architecture Overview
+
+### Core Components
+
+1. **Data Ingestion Layer**: Web scraper and API clients that fetch data from fbref.com, football-data.org, and api-football.com
+2. **Database Layer**: Stores leagues, teams, matches, historical stats, odds, predictions, and results
+3. **Backend API**: Python web framework (FastAPI or Flask) exposing REST endpoints for frontend consumption
+4. **Machine Learning Module**: Handles data preprocessing, model training, evaluation, and prediction generation
+5. **Frontend**: HTML/CSS (Tailwind) and JavaScript for user interactions
+
+### Technology Stack
+
+- **Backend**: Python with FastAPI or Flask
+- **Database**: PostgreSQL or MySQL (to be configured in Docker)
+- **Frontend**: HTML5, JavaScript (vanilla), Tailwind CSS (built locally, not CDN)
+- **Containerization**: Docker and Docker Compose
+- **ML Libraries**: scikit-learn, pandas, numpy (exact choices TBD)
+- **Web Scraping**: requests, BeautifulSoup4
+- **Environment Management**: python-dotenv
+
+### Database Schema (Planned)
+
+The system stores:
+- League and team information
+- Match data with dates and participants
+- Historical statistics from fbref
+- Betting odds from external APIs
+- User-generated predictions and their outcomes
+- Accuracy metrics and performance tracking
+
+## Development Commands
+
+### Project Setup
+
+```bash
+# Create project structure
+mkdir -p src data models docker tests
+mkdir -p src/api src/ml src/scraper src/static
+
+# Install dependencies (to be configured)
+# pip install -r requirements.txt  # or use pyproject.toml
+```
+
+### Environment Configuration
+
+Create a `.env` file from `.env.template` (to be created) with:
+- Database credentials
+- API keys for external services (football-data.org, api-football.com)
+- Application settings
+
+### Docker & Containerization
+
+```bash
+# Build Docker images
+docker compose build
+
+# Start all services (Python app, Database)
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+```
+
+### Frontend Build
+
+```bash
+# Build Tailwind CSS (from local config, not CDN)
+npm run build:css
+
+# Watch mode for development
+npm run watch:css
+```
+
+### Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run specific test file
+pytest tests/test_scraper.py
+
+# Run with coverage
+pytest --cov=src
+```
+
+### Running the Application
+
+```bash
+# Using Docker Compose (recommended)
+docker compose up
+
+# Direct Python (for development)
+python -m src.api.main  # or appropriate entry point
+```
+
+## Key Directories & Files
+
+```
+soccer_prediction/
+├── src/
+│   ├── api/                 # FastAPI/Flask endpoints
+│   ├── ml/                  # ML model and prediction logic
+│   ├── scraper/             # Web scraping (fbref.com)
+│   ├── clients/             # External API clients (football-data.org, api-football.com)
+│   ├── db/                  # Database models and queries
+│   └── static/              # Frontend assets (HTML, JS, compiled CSS)
+├── data/                    # Raw and processed data
+├── models/                  # Trained ML models (serialized)
+├── docker/                  # Dockerfile and compose configuration
+├── tests/                   # pytest test suite
+├── .env.template            # Environment variables template
+├── pyproject.toml           # Python dependencies (or requirements.txt)
+├── docker-compose.yml       # Service orchestration
+└── CLAUDE.md                # This file
+```
+
+## API Endpoints (Planned)
+
+The backend exposes these endpoints:
+
+```
+GET  /api/matches              # Fetch matches for league/period
+GET  /api/match/{id}/details   # Get advanced metrics for a match
+POST /api/match/{id}/predict   # Generate ML prediction
+POST /api/prediction/{id}/save # Save prediction to database
+GET  /api/match/{id}/odds      # Fetch betting odds
+GET  /api/history              # Retrieve all saved predictions & performance
+```
+
+All endpoints include error handling for missing data, failed predictions, and save errors.
+
+## Frontend Flow
+
+1. **League/Period Selection**: Dropdowns and date pickers
+2. **Match List**: Displays matches from API call (GET /api/matches)
+3. **Match Details**: Modal/page showing metrics with "Get Odds" button
+4. **Prediction View**: Displays ML-generated prediction with "Save" button
+5. **History Dashboard**: Shows past predictions, accuracy rates, and profit/loss
+
+Frontend uses vanilla JavaScript for API communication and Tailwind CSS for styling.
+
+## ML Model Development
+
+### Training Pipeline
+
+1. **Data Preprocessing**: Clean and feature-engineer data from database
+2. **Model Selection**: Research and prototype (Logistic Regression, Random Forest, XGBoost)
+3. **Training**: Script to train on historical match data
+4. **Evaluation**: Assess accuracy, precision, recall
+5. **Serialization**: Save trained model as .pkl or .joblib
+
+### Prediction Script
+
+The `/api/match/{id}/predict` endpoint loads the trained model, accepts match data, and returns prediction with confidence metrics.
+
+## Testing Strategy
+
+- **Unit tests** for scraper, API clients, and endpoints (using pytest)
+- **ML tests** for prediction script
+- **Integration tests** for full flow: API → ML → Database
+- **Frontend testing** includes manual testing of all interactions and error states
+
+## Implementation Progress
+
+### Phase 1: Project Setup & Environment ✓ (In Progress)
+
+**Completed:**
+- ✓ Project directory structure created (src/{api,ml,scraper,clients,db,static}, data, models, docker, tests)
+- ✓ `.env.template` created with database and API configuration placeholders
+- ✓ `pyproject.toml` created with all core dependencies (FastAPI, pandas, scikit-learn, etc.)
+
+**In Progress:**
+- Dockerfile for Python application
+- docker-compose.yml for service orchestration
+- Initial Python module structure (__init__.py files)
+- Tailwind CSS build configuration
+
+## Development Notes
+
+- The project is incrementally building Phase 1-2 infrastructure. Steps are tested, committed, and documented one at a time.
+- Use the TODO.md file to track development progress across phases.
+- Tailwind CSS must be built locally using npm/yarn with a build configuration file—do not use the CDN.
+- Environment variables are critical for security: never commit `.env` files, only the `.env.template`.
+- All external API integrations (fbref scraping, football-data.org, api-football.com) require error handling for missing or delayed data.
+- The ML model training should use historical data; start with a baseline model (Logistic Regression) before experimenting with more complex models.
+- * We will proceed incrementally, completing one step at a time. Each step will be created and thoroughly tested before advancing. A step will be removed from the TODO list and committed to the repository only after all tests pass, at which point CLAUDE.md will also be updated.
