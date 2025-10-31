@@ -1,0 +1,1 @@
+"""Clients module - External API clients (football-data.org, api-football.com, the-odds-api.com)."""

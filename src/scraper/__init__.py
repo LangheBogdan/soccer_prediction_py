@@ -1,0 +1,1 @@
+"""Scraper module - Web scraping utilities for fbref.com and other sources."""
