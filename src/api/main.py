@@ -15,9 +15,10 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, status, Depends, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -65,6 +66,28 @@ app.add_middleware(
 if os.getenv("ENV", "development") == "production":
     trusted_hosts = os.getenv("TRUSTED_HOSTS", "localhost,127.0.0.1").split(",")
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
+
+# ===== Static Files Setup =====
+
+# Mount static files (CSS, JavaScript, images)
+static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+
+# ===== Frontend Routes =====
+
+@app.get("/")
+async def serve_frontend():
+    """Serve the main HTML file."""
+    html_path = os.path.join(os.path.dirname(__file__), "..", "static", "index.html")
+    if os.path.exists(html_path):
+        return FileResponse(html_path, media_type="text/html")
+    return JSONResponse(
+        status_code=404,
+        content={"detail": "Frontend not found"}
+    )
+
 
 # ===== Include Route Routers =====
 

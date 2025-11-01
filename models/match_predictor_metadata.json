@@ -1,7 +1,7 @@
 {
   "model_name": "match_predictor",
   "model_type": "logistic",
-  "saved_at": "2025-11-01T19:11:37.510475",
+  "saved_at": "2025-11-01T20:21:51.752499",
   "feature_names": [
     "home_win_rate",
     "home_draw_rate",

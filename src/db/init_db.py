@@ -206,6 +206,7 @@ def main():
 
     if args.seed:
         seed_initial_data()
+        seed_sample_data()
 
     print("✓ Database initialization complete")
 
