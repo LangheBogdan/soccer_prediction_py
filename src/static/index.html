@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soccer Prediction - AI-Powered Match Predictions</title>
+    <link rel="stylesheet" href="css/output.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl font-bold">⚽</span>
+                <h1 class="text-2xl font-bold">Soccer Prediction</h1>
+            </div>
+            <div class="flex space-x-4">
+                <button id="navHome" class="px-4 py-2 rounded hover:bg-blue-700 transition">Home</button>
+                <button id="navHistory" class="px-4 py-2 rounded hover:bg-blue-700 transition">History</button>
+                <button id="navAbout" class="px-4 py-2 rounded hover:bg-blue-700 transition">About</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Loading spinner (hidden by default) -->
+        <div id="loadingSpinner" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="mt-4 text-gray-700">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Home View -->
+        <div id="homeView" class="space-y-6">
+            <!-- League Selection Section -->
+            <section class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Select League</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">League</label>
+                        <select id="leagueSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Loading leagues...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Match Status</label>
+                        <select id="statusSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Status</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="live">Live</option>
+                            <option value="finished">Finished</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button id="loadMatchesBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                            Load Matches
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Match List Section -->
+            <section id="matchListSection" class="hidden bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Matches</h2>
+                <div id="matchList" class="space-y-2">
+                    <!-- Matches will be populated here -->
+                </div>
+            </section>
+
+            <!-- Match Details Modal -->
+            <div id="matchModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
+                        <h2 class="text-2xl font-bold text-gray-800">Match Details</h2>
+                        <button id="closeMatchModal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+
+                    <div class="p-6 space-y-6">
+                        <!-- Teams -->
+                        <div class="border-b pb-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div id="homeTeamDetail" class="text-center">
+                                    <p class="font-bold text-lg"></p>
+                                    <p class="text-2xl font-bold text-blue-600" id="homeGoalsDetail">-</p>
+                                </div>
+                                <div id="awayTeamDetail" class="text-center">
+                                    <p class="font-bold text-lg"></p>
+                                    <p class="text-2xl font-bold text-red-600" id="awayGoalsDetail">-</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statistics -->
+                        <div id="matchStats" class="space-y-4">
+                            <h3 class="font-bold text-gray-800">Match Statistics</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-4 rounded">
+                                    <p class="text-sm text-gray-600">Shots</p>
+                                    <p class="text-lg font-semibold"><span id="homeShotsDetail">-</span> vs <span id="awayShotsDetail">-</span></p>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded">
+                                    <p class="text-sm text-gray-600">Possession</p>
+                                    <p class="text-lg font-semibold"><span id="homePossessionDetail">-</span>% vs <span id="awayPossessionDetail">-</span>%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Get Odds Button -->
+                        <button id="getOddsBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                            Get Betting Odds
+                        </button>
+
+                        <!-- Odds Display -->
+                        <div id="oddsDisplay" class="hidden space-y-4">
+                            <h3 class="font-bold text-gray-800">Betting Odds</h3>
+                            <div id="oddsList" class="space-y-2">
+                                <!-- Odds will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Generate Prediction Button -->
+                        <button id="generatePredictionBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                            Generate Prediction
+                        </button>
+
+                        <!-- Prediction Display -->
+                        <div id="predictionDisplay" class="hidden bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
+                            <h3 class="font-bold text-gray-800">ML Prediction</h3>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div id="homeWinProb" class="bg-white p-3 rounded text-center">
+                                    <p class="text-sm text-gray-600">Home Win</p>
+                                    <p class="text-lg font-bold text-blue-600" id="homeWinProbValue">-</p>
+                                </div>
+                                <div id="drawProb" class="bg-white p-3 rounded text-center">
+                                    <p class="text-sm text-gray-600">Draw</p>
+                                    <p class="text-lg font-bold text-gray-600" id="drawProbValue">-</p>
+                                </div>
+                                <div id="awayWinProb" class="bg-white p-3 rounded text-center">
+                                    <p class="text-sm text-gray-600">Away Win</p>
+                                    <p class="text-lg font-bold text-red-600" id="awayWinProbValue">-</p>
+                                </div>
+                            </div>
+                            <div class="bg-white p-3 rounded">
+                                <p class="text-sm text-gray-600">Most Likely Outcome</p>
+                                <p class="text-lg font-bold" id="predictionOutcome">-</p>
+                                <p class="text-sm text-gray-600">Confidence: <span id="confidenceValue">-</span></p>
+                            </div>
+                            <button id="savePredictionBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                                Save Prediction
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History View -->
+        <div id="historyView" class="hidden space-y-6">
+            <section class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Prediction History</h2>
+
+                <!-- User Stats -->
+                <div id="userStats" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Total Predictions</p>
+                        <p class="text-2xl font-bold text-blue-600" id="totalPredictions">0</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Accuracy</p>
+                        <p class="text-2xl font-bold text-green-600" id="accuracyValue">0%</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Correct Predictions</p>
+                        <p class="text-2xl font-bold text-purple-600" id="correctPredictions">0</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Profit/Loss</p>
+                        <p class="text-2xl font-bold text-yellow-600" id="profitLoss">-</p>
+                    </div>
+                </div>
+
+                <!-- Predictions Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-gray-300">
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Match</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Prediction</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Result</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="predictionsTable">
+                            <!-- Predictions will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- About View -->
+        <div id="aboutView" class="hidden bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">About Soccer Prediction</h2>
+            <div class="space-y-4 text-gray-700">
+                <p>
+                    Soccer Prediction is an AI-powered application that uses machine learning to predict football match outcomes.
+                    Our model analyzes historical data, team statistics, and head-to-head matchups to generate accurate predictions.
+                </p>
+                <h3 class="font-bold text-gray-800 mt-4">How It Works</h3>
+                <ol class="list-decimal list-inside space-y-2">
+                    <li>Select a league and view available matches</li>
+                    <li>Click on a match to see detailed statistics</li>
+                    <li>View betting odds from multiple bookmakers</li>
+                    <li>Generate an AI prediction with confidence scores</li>
+                    <li>Save predictions to track your accuracy over time</li>
+                </ol>
+                <h3 class="font-bold text-gray-800 mt-4">Technology</h3>
+                <p>
+                    Powered by FastAPI backend, PostgreSQL database, scikit-learn machine learning models,
+                    and responsive Tailwind CSS frontend.
+                </p>
+                <p class="text-sm text-gray-500 mt-4">
+                    Version 0.1.0 |
+                    <a href="https://github.com/anthropics/soccer-prediction" class="text-blue-600 hover:underline">View on GitHub</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 mt-12">
+        <div class="container mx-auto px-4 py-6 text-center text-sm">
+            <p>&copy; 2025 Soccer Prediction. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- API Base URL -->
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api';
+        const CURRENT_USER_ID = 1; // TODO: Replace with actual user authentication
+    </script>
+
+    <!-- JavaScript Application -->
+    <script src="js/app.js"></script>
+</body>
+</html>
