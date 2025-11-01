@@ -191,6 +191,14 @@ class PredictionResultResponse(BaseModel):
         from_attributes = True
 
 
+class PredictionResult(BaseModel):
+    """Schema for ML model prediction result."""
+    match_id: int
+    predicted_outcome: str = Field(..., pattern="^(home_win|draw|away_win)$")
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    probabilities: dict = Field(..., description="Probabilities for each outcome")
+
+
 # ===== Error Schemas =====
 
 class ErrorResponse(BaseModel):

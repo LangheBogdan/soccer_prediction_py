@@ -1,0 +1,39 @@
+{
+  "model_name": "match_predictor",
+  "model_type": "logistic",
+  "saved_at": "2025-11-01T19:09:59.769611",
+  "feature_names": [
+    "home_win_rate",
+    "home_draw_rate",
+    "home_loss_rate",
+    "home_avg_goals_for",
+    "home_avg_goals_against",
+    "home_avg_shots",
+    "home_avg_shots_on_target",
+    "home_avg_possession",
+    "home_matches_played",
+    "away_win_rate",
+    "away_draw_rate",
+    "away_loss_rate",
+    "away_avg_goals_for",
+    "away_avg_goals_against",
+    "away_avg_shots",
+    "away_avg_shots_on_target",
+    "away_avg_possession",
+    "away_matches_played",
+    "goal_difference",
+    "possession_difference",
+    "win_rate_difference",
+    "h2h_home_wins",
+    "h2h_draws",
+    "h2h_away_wins",
+    "h2h_home_avg_goals",
+    "h2h_away_avg_goals",
+    "is_home_advantage"
+  ],
+  "classes": [
+    "away_win",
+    "draw",
+    "home_win"
+  ]
+}

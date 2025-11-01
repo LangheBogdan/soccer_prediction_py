@@ -30,7 +30,7 @@ from src.api.schemas import (
     MatchFilterQuery,
     ErrorResponse,
 )
-from src.api.routes import predictions, odds
+from src.api.routes import predictions, odds, ml
 from src.db.models import League, Team, Match, MatchStatus
 
 # Configure logging
@@ -70,6 +70,7 @@ if os.getenv("ENV", "development") == "production":
 
 app.include_router(predictions.router)
 app.include_router(odds.router)
+app.include_router(ml.router)
 
 
 # ===== Custom Exception Handlers =====

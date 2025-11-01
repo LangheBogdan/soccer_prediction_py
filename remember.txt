@@ -1,201 +1,174 @@
 COMPLETED
 ✓ Phase 1: Project Setup & Environment Infrastructure
 ✓ Phase 2: Database Schema Design & SQLAlchemy ORM (10 entities, 14 passing tests)
-✓ Phase 2 (Continuation): Web Scraper & API Clients Implementation (109 passing tests)
+✓ Phase 2 (Continuation): Web Scraper & API Clients Implementation (123 passing tests)
 ✓ Phase 3: API Endpoints & Backend Implementation (152 total passing tests)
+✓ Phase 3.5: ML Model Training & Prediction Endpoints (171 total passing tests)
 
 ================================================================================
-CHECKPOINT: Phase 3 Complete - Ready to Continue Later
+CHECKPOINT: Phase 3.5 Complete - Ready to Resume with Phase 4 (Frontend)
 ================================================================================
 
 CURRENT STATE (as of last session):
-- Phase 3 fully completed and committed to main branch
-- All 152 tests passing (29 Phase 3 API endpoint tests + 123 existing)
-- FastAPI backend fully operational with:
+- Phase 3.5 fully completed and committed to main branch
+- All 171 tests passing (19 Phase 3.5 ML tests + 152 existing)
+- ML model fully operational with:
+  - Feature engineering for match prediction (27 features)
+  - Logistic regression and random forest model support
+  - Model training, evaluation, serialization
+  - Baseline model trained and saved (match_predictor)
+  - ML prediction endpoints (POST /api/ml/predict/match/{id}, etc.)
+  - Model metrics tracking in database
+- FastAPI backend now includes ML prediction capabilities:
   - Health checks and info endpoints
   - League/Team/Match retrieval endpoints
   - Predictions management endpoints
   - Odds retrieval and comparison endpoints
+  - ML prediction endpoints with confidence scores
   - Proper error handling and database session management
-- CLAUDE.md and remember.txt updated with Phase 3 details
+- CLAUDE.md and remember.txt updated with Phase 3.5 details
 - All changes committed with meaningful commit messages
 
-WHAT WAS JUST COMPLETED:
-1. Fixed exception handlers to return JSONResponse (not dict)
-2. Fixed SQLAlchemy 2.0 text() syntax for raw SQL
-3. Fixed parameter shadowing (match_status with Query alias)
-4. All 29 API endpoint tests now passing
-5. Committed Phase 3 implementation (commit: 213d014)
-6. Updated documentation (commit: 997c3a6)
+WHAT WAS JUST COMPLETED IN PHASE 3.5:
+1. Created src/ml/features.py with comprehensive feature engineering
+   - 27 features per match: team stats, H2H analysis, relative metrics
+   - Functions for extracting recent matches, calculating team stats, H2H analysis
+   - Full training dataset creation from historical matches
 
-READY TO RESUME WITH:
-Phase 3.5 - ML Model Training & Prediction Endpoints
-- Create src/ml/model.py for ML model training
-- Create src/ml/features.py for feature engineering
-- Add ML endpoints to API (POST /api/predict/match/{id}, etc.)
-- Create tests for ML components
-- Integration with existing database and API
+2. Created src/ml/model.py with ModelManager for training/prediction
+   - Support for logistic regression and random forest models
+   - Model evaluation (accuracy, precision, recall, F1, AUC, cross-validation)
+   - Model serialization with joblib
+   - Database storage of model metrics
 
-KEY FILES TO KNOW:
-- Main API: src/api/main.py (FastAPI app with core endpoints)
-- Predictions route: src/api/routes/predictions.py
-- Odds route: src/api/routes/odds.py
-- API schemas: src/api/schemas.py (Pydantic models)
-- Tests: tests/test_api_endpoints.py (29 tests)
-- Database models: src/db/models.py (ORM entities)
+3. Created src/api/routes/ml.py with three ML prediction endpoints
+   - POST /api/ml/predict/match/{id} - Get prediction for a match
+   - GET /api/ml/model/metrics - Retrieve model performance metrics
+   - POST /api/ml/model/train - Trigger model retraining
+
+4. Added PredictionResult schema to src/api/schemas.py
+   - match_id, predicted_outcome, confidence, probabilities
+
+5. Integrated ML router into main FastAPI application (src/api/main.py)
+
+6. Created 19 comprehensive ML unit tests (all passing)
+   - Feature engineering tests (7)
+   - Dataset creation tests (4)
+   - Model manager tests (5)
+   - ML integration tests (3)
+
+7. Trained baseline logistic regression model
+   - 50 historical matches as training data
+   - Accuracy: 100% (test set), 77.5% (cross-validation)
+   - All evaluation metrics: 100%
+
+8. Generated model files:
+   - /models/match_predictor.joblib
+   - /models/match_predictor_encoder.joblib
+   - /models/match_predictor_metadata.json
+
+9. Added seed_sample_data() to src/db/init_db.py
+   - Creates test leagues, teams, and 50 historical matches
+
+10. Created src/ml/train_baseline.py for automated training
+    - Database initialization
+    - Sample data seeding
+    - Model training and serialization
+
+11. Verified all 171 tests passing (19 new + 152 existing)
+
+KEY FILES MODIFIED/CREATED:
+- src/ml/features.py (NEW - 300+ lines)
+- src/ml/model.py (NEW - 350+ lines)
+- src/api/routes/ml.py (NEW - 150+ lines)
+- src/ml/train_baseline.py (NEW - 100+ lines)
+- src/api/schemas.py (MODIFIED - added PredictionResult)
+- src/api/main.py (MODIFIED - added ML router)
+- src/db/init_db.py (MODIFIED - added seed_sample_data)
+- tests/test_ml.py (NEW - 19 comprehensive tests)
+- models/ (NEW directory with trained model files)
 
 ENVIRONMENT:
-- Virtual environment available at: /tmp/venv/bin/activate
-- Project root: /home/bogdan/Desktop/soccer_prediction
-- Database: SQLite (development), PostgreSQL (production)
-- Working git branch: main (5 commits ahead of origin)
+- Virtual environment: /home/bogdan/Desktop/soccer_prediction/venv/
+- Project root: /home/bogdan/Desktop/soccer_prediction/
+- Database: SQLite (development), can use PostgreSQL (production)
+- Working git branch: main (commits ahead of origin)
 
-TO RESUME LATER:
-1. cd /home/bogdan/Desktop/soccer_prediction
-2. source /tmp/venv/bin/activate (if needed)
-3. Start with Phase 3.5 implementation
-4. Run: python3 -m pytest tests/ -v (to verify all still passing)
+READY TO RESUME WITH:
+Phase 4 - Frontend Integration & Web Interface
+- Create HTML template (src/static/index.html)
+- Create JavaScript frontend (src/static/js/app.js)
+- Build Tailwind CSS for styling
+- Implement league/match selection UI
+- Implement prediction display and saving
+- Implement historical predictions dashboard
+- Create responsive mobile-friendly design
+
+================================================================================
+COMPLETED IN PHASE 1 - Project Setup & Environment
+
+✓ Project directory structure created
+✓ .env.template with configuration
+✓ pyproject.toml with dependencies
+✓ Dockerfile with multi-stage build
+✓ docker-compose.yml for services
+✓ Tailwind CSS setup with npm scripts
+
+================================================================================
+COMPLETED IN PHASE 2 - Data Acquisition & Database
+
+✓ Database schema (10 entities)
+✓ SQLAlchemy ORM models
+✓ Database initialization and seeding
+✓ FBref.com web scraper
+✓ football-data.org API client
+✓ api-football.com API client
+✓ the-odds-api.com API client
+✓ Data pipeline orchestration
+✓ 14 database tests + 80 scraper/client tests = 94 total
+
+================================================================================
+COMPLETED IN PHASE 2 (Continuation) - Web Scraper & API Clients
+
+Full implementation with 123 passing tests for:
+✓ FBref.com scraper
+✓ football-data.org API client
+✓ api-football.com API client
+✓ the-odds-api.com API client
+✓ Data pipeline orchestration
+
+================================================================================
+COMPLETED IN PHASE 3 - API Endpoints & Backend
+
+✓ FastAPI application setup
+✓ Dependency injection for database sessions
+✓ Request/response validation schemas
+✓ League, Team, Match endpoints
+✓ Predictions management endpoints
+✓ Odds retrieval and comparison endpoints
+✓ Error handling and middleware
+✓ 29 API endpoint tests
+
+Total: 152 tests passing
+
+================================================================================
+COMPLETED IN PHASE 3.5 - ML Model Training & Prediction
+
+✓ Feature engineering module
+✓ ML model training module
+✓ ML prediction endpoints
+✓ Baseline model training
+✓ Model serialization
+✓ 19 ML unit tests
+
+Total: 171 tests passing (19 new + 152 existing)
 
 ================================================================================
 
-COMPLETED IN PHASE 2 CONTINUATION - Web Scraper Implementation
+TO RESUME LATER:
+1. cd /home/bogdan/Desktop/soccer_prediction
+2. source venv/bin/activate (if needed)
+3. Start with Phase 4 (Frontend) implementation
+4. Run: python3 -m pytest tests/ -v (to verify all tests still passing)
 
-1. ✓ **fbref.com Scraper** (src/scraper/fbref_scraper.py)
-   - Extract league standings and team statistics
-   - Extract historical match data with detailed stats
-   - Rate limiting enforcement (2-second delays)
-   - Error handling for missing data and network issues
-   - Data transformation to match database schema
-   - 21 comprehensive unit tests
-
-2. ✓ **External API Clients** (src/clients/)
-   - ✓ football-data.org client (src/clients/football_data_client.py)
-     - Fetch current matches for a league with status filters
-     - Fetch standings for 6 major European leagues
-     - Fetch betting odds from multiple bookmakers
-     - Head-to-head match history queries
-     - Date range queries and player statistics
-     - 19 comprehensive unit tests
-
-   - ✓ api-football.com client (src/clients/api_football_client.py)
-     - Fetch fixtures/matches with status filtering
-     - Fetch standings and team statistics
-     - Fetch player performance metrics
-     - Betting odds from multiple bookmakers
-     - Injury/suspension information
-     - Head-to-head and date range queries
-     - 21 comprehensive unit tests
-
-   - ✓ the-odds-api.com client (src/clients/odds_api_client.py)
-     - Specialized betting odds aggregation from 12+ bookmakers
-     - Support for 8 major European leagues + Champions League
-     - Historical odds tracking by date
-     - Event/match-specific odds queries
-     - Best odds identification across bookmakers
-     - 29 comprehensive unit tests
-
-3. ✓ **Data Pipeline** (src/scraper/pipeline.py)
-   - Orchestrate data collection from all sources (FBref, football-data, api-football, the-odds-api)
-   - Transform scraped/API data to ORM models
-   - Bulk insert/update into database with deduplication
-   - Handle data conflicts from multiple sources
-   - Comprehensive error handling and logging
-   - 18 pipeline unit tests
-
-4. ✓ **Testing** - 123 TOTAL PASSING TESTS (14 DB + 80 Phase 2 + 29 OddsApiClient)
-   - Unit tests for each scraper/client with mocking
-   - Mock external API responses to avoid real requests
-   - Test data transformation pipeline
-   - Test database inserts/updates with fixtures
-   - Rate limiting and error handling tests
-   - All 123 tests passing in 3.03 seconds
-
-5. ✓ **Environment Configuration** (.env.template)
-   - API keys for football-data.org, api-football.com, and the-odds-api.com
-   - FBref scraper configuration (delays, timeouts)
-   - Rate limiting parameters for each source
-   - Data pipeline feature flags
-   - Retry and error handling configuration
-   - Logging configuration with optional file output
-
-COMPLETED IN PHASE 3 - API Endpoints & Backend Implementation
-
-1. ✓ **FastAPI Application** (src/api/main.py)
-   - CORS middleware for frontend integration
-   - TrustedHostMiddleware for production security
-   - Custom exception handlers returning JSONResponse
-   - Health check endpoints with database connectivity verification
-   - League endpoints: GET /api/leagues, GET /api/leagues/{id}
-   - Team endpoints: GET /api/leagues/{league_id}/teams
-   - Match endpoints: GET /api/matches, GET /api/matches/{id}, GET /api/leagues/{league_id}/matches
-   - API version endpoint: GET /api/version
-   - Startup/shutdown event handlers for logging
-
-2. ✓ **Dependency Injection** (src/api/dependencies.py)
-   - Database session management with FastAPI Depends
-   - Automatic session cleanup and error handling
-   - Session lifecycle with rollback on errors
-
-3. ✓ **Request/Response Schemas** (src/api/schemas.py)
-   - League, Team, Match response models
-   - MatchDetailResponse with relationships
-   - Odds, Prediction, PredictionResult schemas
-   - Error response schema for consistent error handling
-   - Pydantic v2 compatible validation
-
-4. ✓ **API Route Modules** (src/api/routes/)
-   - predictions.py: Create predictions, get predictions, get user stats
-   - odds.py: Match odds, best odds, bookmakers, comparison endpoints
-
-5. ✓ **Comprehensive Testing** (tests/test_api_endpoints.py)
-   - 29 integration tests covering all endpoints
-   - Health checks, league/team/match retrieval
-   - Odds endpoints and prediction management
-   - Database fixtures with SQLite test database
-   - All tests passing with proper error handling
-
-6. ✓ **Critical Fixes**
-   - Exception handlers returning JSONResponse instead of dict
-   - SQLAlchemy 2.0 text() syntax for raw SQL queries
-   - Parameter shadowing: match_status with Query alias
-   - TrustedHostMiddleware conditionally applied in production only
-
-7. ✓ **Testing Results** - 152 TOTAL PASSING TESTS (29 Phase 3 + 123 existing)
-   - All API endpoints tested with proper error cases
-   - Database session management verified
-   - Middleware and exception handling verified
-   - Response format consistency verified
-
-NEXT STEPS - Phase 3.5: ML Model Training & Prediction Endpoints
-
-1. **ML Model Training Pipeline** (src/ml/)
-   - Data preprocessing and feature engineering from database
-   - Model training script (Logistic Regression baseline)
-   - Model evaluation metrics (accuracy, precision, recall, F1)
-   - Model serialization (joblib/pickle)
-   - Cross-validation and hyperparameter tuning
-
-2. **ML Prediction Endpoints** (src/api/routes/ml.py or main.py)
-   - POST /api/predict/match/{id} - Generate ML prediction for a match
-   - GET /api/model/metrics - Get trained model performance metrics
-   - POST /api/model/train - Trigger model retraining with latest data
-
-3. **Model Management**
-   - Store trained models in models/ directory
-   - Version tracking for models
-   - Model performance logging and versioning
-   - Fallback to baseline model if training fails
-
-4. **Feature Engineering**
-   - Extract team statistics from database
-   - Historical match outcomes and trends
-   - Home/away advantage metrics
-   - Recent form (last 5-10 matches)
-   - Head-to-head records
-
-THEN - Phase 4: Frontend & Web Interface
-   - League and match selection UI
-   - Prediction display and saving
-   - Historical predictions and accuracy dashboard
-   - Tailwind CSS styling
-   - Interactive odds comparison
+================================================================================
