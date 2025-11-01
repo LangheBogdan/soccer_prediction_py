@@ -89,6 +89,18 @@ async def serve_frontend():
     )
 
 
+@app.get("/favicon.ico")
+async def favicon():
+    """Return a simple favicon to prevent 404 errors."""
+    return JSONResponse({"detail": "No favicon"}, status_code=204)
+
+
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    """Handle CORS preflight requests."""
+    return {"detail": "OK"}
+
+
 # ===== Include Route Routers =====
 
 app.include_router(predictions.router)
