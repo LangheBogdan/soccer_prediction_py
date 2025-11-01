@@ -299,9 +299,77 @@ The `/api/match/{id}/predict` endpoint loads the trained model, accepts match da
 - 12+ bookmaker odds aggregation with best odds computation
 - Historical odds tracking and date-based queries
 
+### Phase 3: API Endpoints & Backend ✓ (Completed)
+
+**Completed:**
+- ✓ FastAPI application setup (`src/api/main.py`)
+  - CORS middleware for frontend integration
+  - TrustedHostMiddleware for production security
+  - Custom exception handlers with proper JSONResponse returns
+  - Health check endpoints with database connectivity verification
+  - League endpoints (list all, get by ID with pagination)
+  - Team endpoints (list teams in league)
+  - Match endpoints (list all, filter by league/status, get details)
+  - API version and info endpoints
+  - Startup/shutdown event handlers
+
+- ✓ Dependency injection layer (`src/api/dependencies.py`)
+  - Database session management with FastAPI Depends
+  - Automatic session cleanup and error handling
+  - Session lifecycle management with rollback on errors
+
+- ✓ Request/response validation schemas (`src/api/schemas.py`)
+  - League, Team, Match response models
+  - MatchDetailResponse with relationships
+  - MatchFilterQuery for filter parameters
+  - Odds, Prediction, PredictionResult models
+  - Error response schema
+  - Pydantic v2 compatible with proper validation
+
+- ✓ API route modules
+  - `src/api/routes/predictions.py`: Prediction management
+    - Create predictions with user/match validation
+    - Get prediction by ID
+    - Get user's predictions with pagination
+    - Get user statistics (total predictions, accuracy, ROI)
+  - `src/api/routes/odds.py`: Betting odds endpoints
+    - Get match odds with optional bookmaker filtering
+    - Get best odds across all bookmakers
+    - List available bookmakers
+    - Compare odds across bookmakers in tabular format
+
+- ✓ Comprehensive endpoint tests (`tests/test_api_endpoints.py`)
+  - 29 integration tests covering all endpoints
+  - TestHealthCheck: root, health check, API version
+  - TestLeagueEndpoints: list, get by ID, pagination, not found
+  - TestTeamEndpoints: list teams in league, not found
+  - TestMatchEndpoints: list, filter by league/status, details, not found, invalid status
+  - TestOddsEndpoints: match odds, best odds, available bookmakers, comparison
+  - TestPredictionEndpoints: create, get, list user's predictions, statistics, error cases
+  - Database fixtures with SQLite test database
+  - All tests passing with proper error handling
+
+- ✓ Fixed critical issues
+  - Exception handlers returning JSONResponse instead of dict
+  - SQLAlchemy 2.0 text() syntax for raw SQL queries
+  - Parameter shadowing: match_status with Query alias to map to "status" in URL
+  - TrustedHostMiddleware conditionally applied only in production
+
+- ✓ **152 Total Passing Tests** (29 Phase 3 + 123 existing)
+
+**API Features:**
+- RESTful endpoint design following standard conventions
+- Proper HTTP status codes (200, 201, 400, 404, 500, 503)
+- Consistent error response format with detail and timestamp
+- Request parameter validation with informative error messages
+- Database session management per request
+- Comprehensive logging throughout
+- CORS headers for frontend integration
+- Production security middleware
+
 **Pending:**
-- API endpoints implementation (Phase 3)
-- ML model training and prediction (Phase 3)
+- ML model training and prediction endpoints (Phase 3.5)
+- Frontend integration and UI implementation (Phase 4)
 
 ## Development Notes
 
