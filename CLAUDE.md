@@ -236,9 +236,62 @@ The `/api/match/{id}/predict` endpoint loads the trained model, accepts match da
 - Betting odds tracking from multiple bookmakers
 - User prediction history with accuracy metrics and P/L tracking
 
+### Phase 2 (Continuation): Web Scraper & API Clients ✓ (Completed)
+
+**Completed:**
+- ✓ FBref.com web scraper (`src/scraper/fbref_scraper.py`)
+  - League standings and team statistics extraction
+  - Historical match data with detailed statistics
+  - Rate limiting enforcement (2-second delays, respectful scraping)
+  - Error handling for network issues and missing data
+  - 21 comprehensive unit tests
+
+- ✓ football-data.org API client (`src/clients/football_data_client.py`)
+  - Current/scheduled match fetching with status filters
+  - League standings for 6 major European leagues
+  - Betting odds from multiple bookmakers
+  - Head-to-head match history
+  - Date range queries and player statistics
+  - 19 comprehensive unit tests
+
+- ✓ api-football.com API client (`src/clients/api_football_client.py`)
+  - Fixtures/matches with status filtering
+  - League standings and team statistics
+  - Player statistics and performance metrics
+  - Betting odds from multiple bookmakers
+  - Injury and suspension information
+  - 21 comprehensive unit tests
+
+- ✓ Data pipeline orchestration (`src/scraper/pipeline.py`)
+  - Multi-source data collection (FBref, football-data.org, api-football.com)
+  - Data transformation to ORM models
+  - Conflict resolution and deduplication
+  - Bulk insert/update operations
+  - Comprehensive error handling and logging
+  - 18 comprehensive pipeline tests
+
+- ✓ Enhanced environment configuration (`.env.template`)
+  - API keys for external services
+  - Rate limiting and timeout settings
+  - Data pipeline feature flags
+  - Retry and error handling configuration
+
+- ✓ **94 Total Passing Tests** (80 new tests in Phase 2 continuation)
+  - All tests use mocking to avoid external API calls
+  - Full coverage of scraper, API clients, and pipeline
+  - Error handling and edge case testing
+
+**Scraper/API Features:**
+- Respectful rate limiting for all sources
+- Comprehensive error handling (timeouts, 429 rate limits, bad requests)
+- Support for multiple data source formats
+- Automatic deduplication and conflict resolution
+- Flexible data pipeline with configurable sources
+- Extensive logging for debugging and monitoring
+
 **Pending:**
-- Web scraper implementation (Phase 2 continuation)
 - API endpoints implementation (Phase 3)
+- ML model training and prediction (Phase 3)
 
 ## Development Notes
 
