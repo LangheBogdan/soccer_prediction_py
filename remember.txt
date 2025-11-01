@@ -1,0 +1,2 @@
+TODO
+ "Let's continue building. Phase 1 infrastructure is done. Let's start Phase 2: Data Acquisition with the database schema design."
