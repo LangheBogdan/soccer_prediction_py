@@ -21,10 +21,16 @@ def seed_initial_data():
         # Create default user if doesn't exist
         user = session.query(User).filter(User.id == 1).first()
         if not user:
-            user = User(id=1, username="demo_user", email="demo@soccer-prediction.app")
+            # Use a simple password hash for demo user (not secure, for testing only)
+            user = User(
+                id=1,
+                username="demo_user",
+                email="demo@soccer-prediction.app",
+                password_hash="demo_password_hash"  # For demo/testing only
+            )
             session.add(user)
             session.commit()
-            print("✓ Created default user (ID: 1)")
+            print("✓ Created default user (ID: 1, username: demo_user)")
 
         # Check if data already exists
         if session.query(League).count() > 0:
