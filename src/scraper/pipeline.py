@@ -26,6 +26,7 @@ from src.db.models import (
 )
 from src.clients.football_data_client import FootballDataClient
 from src.clients.api_football_client import ApiFootballClient
+from src.clients.odds_api_client import OddsApiClient
 from src.scraper.fbref_scraper import FbrefScraper
 
 # Configure logging
@@ -53,6 +54,7 @@ class DataPipeline:
         db_session: Session,
         football_data_key: Optional[str] = None,
         api_football_key: Optional[str] = None,
+        odds_api_key: Optional[str] = None,
     ):
         """
         Initialize the data pipeline.
@@ -61,6 +63,7 @@ class DataPipeline:
             db_session: SQLAlchemy database session
             football_data_key: API key for football-data.org
             api_football_key: API key for api-football.com
+            odds_api_key: API key for the-odds-api.com
         """
         self.db = db_session
         self.fbref = FbrefScraper()
@@ -72,6 +75,11 @@ class DataPipeline:
         self.api_football = (
             ApiFootballClient(api_football_key)
             if api_football_key
+            else None
+        )
+        self.odds_api = (
+            OddsApiClient(odds_api_key)
+            if odds_api_key
             else None
         )
 
@@ -539,6 +547,161 @@ class DataPipeline:
                 logger.warning(f"Failed to create match: {e}")
 
         return matches
+
+    def fetch_and_store_odds(
+        self,
+        league_code: str,
+        match_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        Fetch odds from the-odds-api.com and store in database.
+
+        Args:
+            league_code: League code (e.g., 'EPL', 'LA_LIGA')
+            match_id: Specific match ID to fetch odds for (optional)
+
+        Returns:
+            Dictionary with fetch results and statistics
+
+        Raises:
+            PipelineError: If odds API client is not configured
+        """
+        from src.db.models import Odds
+
+        if not self.odds_api:
+            raise PipelineError("Odds API client not configured")
+
+        result = {
+            'league_code': league_code,
+            'odds_fetched': 0,
+            'odds_stored': 0,
+            'errors': [],
+        }
+
+        try:
+            # Get odds from API
+            logger.info(f"Fetching odds for {league_code}")
+            odds_data = self.odds_api.get_odds_for_league_code(league_code)
+
+            if not odds_data:
+                logger.warning(f"No odds data available for {league_code}")
+                return result
+
+            result['odds_fetched'] = len(odds_data)
+
+            # Process each match's odds
+            for match_odds in odds_data:
+                try:
+                    # Extract match information
+                    home_team = match_odds.get('home_team')
+                    away_team = match_odds.get('away_team')
+                    commence_time = match_odds.get('commence_time')
+
+                    # Find matching match in database
+                    from src.db.models import Match
+                    db_match = (
+                        self.db.query(Match)
+                        .join(Match.home_team_obj)
+                        .join(Match.away_team_obj)
+                        .filter(
+                            Match.home_team_obj.has(name=home_team),
+                            Match.away_team_obj.has(name=away_team),
+                        )
+                        .first()
+                    )
+
+                    if not db_match:
+                        logger.debug(f"No match found for {home_team} vs {away_team}")
+                        continue
+
+                    # If specific match_id requested, filter
+                    if match_id and db_match.id != match_id:
+                        continue
+
+                    # Store odds from each bookmaker
+                    for bookmaker_data in match_odds.get('bookmakers', []):
+                        try:
+                            bookmaker_name = bookmaker_data.get('key')
+                            markets = bookmaker_data.get('markets', [])
+
+                            # Extract h2h (match winner) odds
+                            h2h_market = next(
+                                (m for m in markets if m.get('key') == 'h2h'),
+                                None
+                            )
+
+                            if not h2h_market:
+                                continue
+
+                            outcomes = h2h_market.get('outcomes', [])
+
+                            # Map outcomes to odds
+                            home_odds = None
+                            draw_odds = None
+                            away_odds = None
+
+                            for outcome in outcomes:
+                                team_name = outcome.get('name')
+                                odds_value = outcome.get('price')
+
+                                if team_name == home_team:
+                                    home_odds = odds_value
+                                elif team_name == away_team:
+                                    away_odds = odds_value
+                                elif team_name.lower() == 'draw':
+                                    draw_odds = odds_value
+
+                            # Extract totals (over/under) if available
+                            totals_market = next(
+                                (m for m in markets if m.get('key') == 'totals'),
+                                None
+                            )
+
+                            over_2_5 = None
+                            under_2_5 = None
+
+                            if totals_market:
+                                for outcome in totals_market.get('outcomes', []):
+                                    if outcome.get('name') == 'Over' and outcome.get('point') == 2.5:
+                                        over_2_5 = outcome.get('price')
+                                    elif outcome.get('name') == 'Under' and outcome.get('point') == 2.5:
+                                        under_2_5 = outcome.get('price')
+
+                            # Create or update odds record
+                            odds_record = Odds(
+                                match_id=db_match.id,
+                                bookmaker=bookmaker_name,
+                                home_win_odds=home_odds,
+                                draw_odds=draw_odds,
+                                away_win_odds=away_odds,
+                                over_2_5_odds=over_2_5,
+                                under_2_5_odds=under_2_5,
+                                retrieved_at=datetime.utcnow(),
+                            )
+
+                            self.db.add(odds_record)
+                            result['odds_stored'] += 1
+
+                        except Exception as e:
+                            logger.warning(f"Failed to store odds for bookmaker {bookmaker_name}: {e}")
+                            result['errors'].append(str(e))
+
+                except Exception as e:
+                    logger.warning(f"Failed to process match odds: {e}")
+                    result['errors'].append(str(e))
+
+            # Commit all odds
+            self.db.commit()
+            logger.info(
+                f"Stored {result['odds_stored']} odds records for {league_code}"
+            )
+
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to fetch/store odds: {e}")
+            result['errors'].append(str(e))
+
+        return result
 
     def run_full_pipeline(
         self,

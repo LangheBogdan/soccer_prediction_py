@@ -1,10 +1,10 @@
 """
-Client for the-odds-api.com API (RapidAPI).
+Client for the-odds-api.com API.
 
 This module provides functionality to fetch betting odds from multiple bookmakers
 for football matches across various leagues.
 
-API Documentation: https://rapidapi.com/api-sports/api/api-odds
+API Documentation: https://the-odds-api.com/liveapi/guides/v4/
 """
 
 import logging
@@ -29,17 +29,22 @@ class RateLimitError(OddsApiError):
 
 class OddsApiClient:
     """
-    Client for the-odds-api.com API (RapidAPI).
+    Client for the-odds-api.com API.
 
     Provides betting odds from multiple bookmakers for football matches.
+    Supports both direct API and RapidAPI endpoints.
 
     Attributes:
-        api_key (str): RapidAPI key for the-odds-api
-        api_host (str): RapidAPI host header
+        api_key (str): API key for the-odds-api.com (direct) or RapidAPI
         base_url (str): Base URL for API endpoints
+        use_rapidapi (bool): Whether to use RapidAPI endpoint
     """
 
-    BASE_URL = "https://api-odds.p.rapidapi.com"
+    # Direct API endpoint
+    DIRECT_BASE_URL = "https://api.the-odds-api.com/v4"
+
+    # RapidAPI endpoint (alternative)
+    RAPIDAPI_BASE_URL = "https://api-odds.p.rapidapi.com"
     RAPIDAPI_HOST = "api-odds.p.rapidapi.com"
 
     # Sport IDs in the-odds-api
@@ -76,13 +81,14 @@ class OddsApiClient:
         'barstool',
     ]
 
-    def __init__(self, api_key: str, request_delay: float = 0.5):
+    def __init__(self, api_key: str, request_delay: float = 0.5, use_rapidapi: bool = False):
         """
         Initialize the odds API client.
 
         Args:
-            api_key: RapidAPI key for the-odds-api
+            api_key: API key for the-odds-api.com (direct) or RapidAPI
             request_delay: Delay between requests in seconds
+            use_rapidapi: Use RapidAPI endpoint instead of direct API (default: False)
 
         Raises:
             ValueError: If API key is empty
@@ -93,12 +99,23 @@ class OddsApiClient:
         self.api_key = api_key
         self.request_delay = request_delay
         self.last_request_time = 0
+        self.use_rapidapi = use_rapidapi
+        self.base_url = self.RAPIDAPI_BASE_URL if use_rapidapi else self.DIRECT_BASE_URL
+
         self.session = requests.Session()
-        self.session.headers.update({
-            'X-RapidAPI-Key': self.api_key,
-            'X-RapidAPI-Host': self.RAPIDAPI_HOST,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
+
+        if use_rapidapi:
+            # RapidAPI uses headers for authentication
+            self.session.headers.update({
+                'X-RapidAPI-Key': self.api_key,
+                'X-RapidAPI-Host': self.RAPIDAPI_HOST,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
+        else:
+            # Direct API uses query parameters for authentication
+            self.session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
 
     def _rate_limit_check(self) -> None:
         """Enforce rate limiting between requests."""
@@ -113,7 +130,7 @@ class OddsApiClient:
         Make a GET request to the API.
 
         Args:
-            endpoint: API endpoint (e.g., '/odds')
+            endpoint: API endpoint (e.g., '/sports', '/sports/soccer_epl/odds')
             params: Query parameters
 
         Returns:
@@ -124,7 +141,13 @@ class OddsApiClient:
             RateLimitError: If rate limit is exceeded
         """
         self._rate_limit_check()
-        url = f"{self.BASE_URL}{endpoint}"
+        url = f"{self.base_url}{endpoint}"
+
+        # For direct API, add apiKey to query parameters
+        if not self.use_rapidapi:
+            if params is None:
+                params = {}
+            params['apiKey'] = self.api_key
 
         try:
             logger.debug(f"GET {url}")
@@ -135,8 +158,12 @@ class OddsApiClient:
                 raise RateLimitError("Rate limit exceeded")
 
             if response.status_code == 400:
-                logger.error(f"Bad request: {response.json()}")
+                logger.error(f"Bad request: {response.text}")
                 raise OddsApiError(f"Bad request: {response.text}")
+
+            if response.status_code == 401:
+                logger.error(f"Unauthorized: Invalid API key")
+                raise OddsApiError("Unauthorized: Invalid API key")
 
             response.raise_for_status()
             data = response.json()
@@ -226,15 +253,30 @@ class OddsApiClient:
             logger.warning(f"Unknown league ID: {league_id}, proceeding anyway")
 
         try:
-            params = {'sport': league_id}
+            if self.use_rapidapi:
+                # RapidAPI endpoint
+                params = {'sport': league_id}
 
-            if bookmakers:
-                params['bookmakers'] = ','.join(bookmakers)
+                if bookmakers:
+                    params['bookmakers'] = ','.join(bookmakers)
 
-            if markets:
-                params['markets'] = ','.join(markets)
+                if markets:
+                    params['markets'] = ','.join(markets)
 
-            response = self._get('/odds', params=params)
+                response = self._get('/odds', params=params)
+            else:
+                # Direct API endpoint: /v4/sports/{sport}/odds
+                endpoint = f'/sports/{league_id}/odds'
+                params = {}
+
+                if bookmakers:
+                    params['bookmakers'] = ','.join(bookmakers)
+
+                if markets:
+                    params['markets'] = ','.join(markets)
+
+                response = self._get(endpoint, params=params)
+
             odds_data = response if isinstance(response, list) else response.get('data', [])
 
             logger.info(f"Retrieved odds for {len(odds_data)} matches in {league_id}")

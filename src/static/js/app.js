@@ -254,7 +254,7 @@ function closeMatchModal() {
 
 async function getMatchOdds() {
     /**
-     * Fetch and display betting odds
+     * Fetch and display betting odds from database
      */
     if (!state.currentMatch) {
         showError('No match selected');
@@ -262,11 +262,61 @@ async function getMatchOdds() {
     }
 
     try {
-        const odds = await apiCall(`/odds/matches/${state.currentMatch.id}`);
+        const odds = await apiCall(`/odds/match/${state.currentMatch.id}`);
         displayOdds(odds);
         document.getElementById('oddsDisplay').classList.remove('hidden');
     } catch (error) {
         showError('Failed to load odds');
+    }
+}
+
+async function fetchLiveOdds() {
+    /**
+     * Fetch live odds from the Odds API
+     */
+    if (!state.currentMatch) {
+        showError('No match selected');
+        return;
+    }
+
+    try {
+        showLoading(true);
+        const result = await apiCall(`/odds/match/${state.currentMatch.id}/fetch`, {
+            method: 'POST'
+        });
+
+        showLoading(false);
+
+        if (result.success) {
+            showSuccess(`Fetched ${result.odds_stored} odds from ${result.odds_fetched} sources`);
+            // Refresh the odds display
+            await getMatchOdds();
+        } else {
+            if (result.errors && result.errors.length > 0) {
+                showError(`Failed to fetch live odds: ${result.errors[0]}`);
+            } else {
+                showError('No odds available from API');
+            }
+        }
+    } catch (error) {
+        showError(error.message || 'Failed to fetch live odds');
+    }
+}
+
+async function getBestOdds() {
+    /**
+     * Get and display best odds across all bookmakers
+     */
+    if (!state.currentMatch) {
+        showError('No match selected');
+        return;
+    }
+
+    try {
+        const bestOdds = await apiCall(`/odds/match/${state.currentMatch.id}/best`);
+        displayBestOdds(bestOdds);
+    } catch (error) {
+        showError('Failed to load best odds');
     }
 }
 
@@ -275,26 +325,75 @@ function displayOdds(odds) {
      * Display odds in the UI
      */
     const oddsList = document.getElementById('oddsList');
+    const oddsComparison = document.getElementById('oddsComparison');
     oddsList.innerHTML = '';
+    oddsComparison.classList.add('hidden');
 
     if (!odds || odds.length === 0) {
-        oddsList.innerHTML = '<p class="text-gray-500">No odds available</p>';
+        oddsList.innerHTML = '<p class="text-gray-500">No odds available. Click "Fetch Live Odds" to get the latest odds.</p>';
         return;
     }
 
+    // Show odds list by default
     odds.forEach(odd => {
         const oddElement = document.createElement('div');
-        oddElement.className = 'border border-gray-200 rounded-lg p-3 flex justify-between';
+        oddElement.className = 'border border-gray-200 rounded-lg p-3 flex justify-between items-center hover:bg-gray-50';
         oddElement.innerHTML = `
             <span class="font-semibold text-gray-800">${odd.bookmaker}</span>
             <div class="space-x-4">
-                <span class="text-sm">Home: <span class="font-semibold">${parseFloat(odd.home_win_odds).toFixed(2)}</span></span>
-                <span class="text-sm">Draw: <span class="font-semibold">${parseFloat(odd.draw_odds).toFixed(2)}</span></span>
-                <span class="text-sm">Away: <span class="font-semibold">${parseFloat(odd.away_win_odds).toFixed(2)}</span></span>
+                <span class="text-sm">Home: <span class="font-semibold text-green-600">${parseFloat(odd.home_win_odds).toFixed(2)}</span></span>
+                <span class="text-sm">Draw: <span class="font-semibold text-gray-600">${parseFloat(odd.draw_odds).toFixed(2)}</span></span>
+                <span class="text-sm">Away: <span class="font-semibold text-blue-600">${parseFloat(odd.away_win_odds).toFixed(2)}</span></span>
             </div>
         `;
         oddsList.appendChild(oddElement);
     });
+
+    // Add timestamp if available
+    if (odds.length > 0 && odds[0].retrieved_at) {
+        const timestamp = document.createElement('p');
+        timestamp.className = 'text-xs text-gray-500 text-right';
+        const date = new Date(odds[0].retrieved_at);
+        timestamp.textContent = `Last updated: ${date.toLocaleString()}`;
+        oddsList.appendChild(timestamp);
+    }
+}
+
+function displayBestOdds(bestOdds) {
+    /**
+     * Display best odds in a comparison format
+     */
+    const oddsList = document.getElementById('oddsList');
+    oddsList.innerHTML = '';
+
+    const comparisonTable = document.createElement('div');
+    comparisonTable.className = 'bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg p-4';
+    comparisonTable.innerHTML = `
+        <h4 class="font-bold text-gray-800 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            Best Odds Across All Bookmakers
+        </h4>
+        <div class="grid grid-cols-3 gap-3">
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-600 mb-1">Home Win</p>
+                <p class="text-2xl font-bold text-green-600">${parseFloat(bestOdds.home_win.odds).toFixed(2)}</p>
+                <p class="text-xs text-gray-500 mt-1">${bestOdds.home_win.bookmaker}</p>
+            </div>
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-600 mb-1">Draw</p>
+                <p class="text-2xl font-bold text-gray-600">${parseFloat(bestOdds.draw.odds).toFixed(2)}</p>
+                <p class="text-xs text-gray-500 mt-1">${bestOdds.draw.bookmaker}</p>
+            </div>
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-600 mb-1">Away Win</p>
+                <p class="text-2xl font-bold text-blue-600">${parseFloat(bestOdds.away_win.odds).toFixed(2)}</p>
+                <p class="text-xs text-gray-500 mt-1">${bestOdds.away_win.bookmaker}</p>
+            </div>
+        </div>
+    `;
+    oddsList.appendChild(comparisonTable);
 }
 
 // ===== Prediction Functions =====
@@ -478,6 +577,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Match details actions
     document.getElementById('getOddsBtn').addEventListener('click', getMatchOdds);
+    document.getElementById('fetchLiveOddsBtn').addEventListener('click', fetchLiveOdds);
+    document.getElementById('getBestOddsBtn').addEventListener('click', getBestOdds);
     document.getElementById('generatePredictionBtn').addEventListener('click', generatePrediction);
     document.getElementById('savePredictionBtn').addEventListener('click', savePrediction);
 

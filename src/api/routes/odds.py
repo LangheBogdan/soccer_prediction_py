@@ -5,9 +5,11 @@ Provides endpoints for:
 - Retrieving betting odds for matches
 - Getting best odds across bookmakers
 - Historical odds tracking
+- Fetching live odds from external API
 """
 
 import logging
+import os
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status, Depends
@@ -15,7 +17,8 @@ from sqlalchemy.orm import Session
 
 from src.api.dependencies import get_db
 from src.api.schemas import OddsResponse
-from src.db.models import Odds, Match
+from src.db.models import Odds, Match, League
+from src.scraper.pipeline import DataPipeline
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -261,4 +264,145 @@ def compare_odds(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate odds comparison",
+        )
+
+
+@router.post("/match/{match_id}/fetch", response_model=dict)
+def fetch_live_odds_for_match(
+    match_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Fetch live odds for a specific match from the Odds API.
+
+    This endpoint fetches fresh odds from the-odds-api.com and stores them in the database.
+
+    Path Parameters:
+    - match_id: Match ID
+
+    Returns:
+        Dictionary with fetch results and stored odds count
+
+    Raises:
+        HTTPException: If match not found or API key not configured
+    """
+    try:
+        # Verify match exists
+        match = db.query(Match).filter(Match.id == match_id).first()
+        if not match:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Match {match_id} not found",
+            )
+
+        # Get league for the match
+        league = db.query(League).filter(League.id == match.league_id).first()
+        if not league:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"League not found for match {match_id}",
+            )
+
+        # Get API key from environment
+        odds_api_key = os.getenv('ODDS_API_KEY')
+        if not odds_api_key:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Odds API not configured. Please set ODDS_API_KEY environment variable.",
+            )
+
+        # Initialize pipeline with odds API
+        pipeline = DataPipeline(
+            db_session=db,
+            odds_api_key=odds_api_key,
+        )
+
+        # Fetch and store odds
+        logger.info(f"Fetching live odds for match {match_id}")
+        result = pipeline.fetch_and_store_odds(
+            league_code=league.name,  # Assuming league.name contains code like 'EPL'
+            match_id=match_id,
+        )
+
+        return {
+            "match_id": match_id,
+            "odds_fetched": result['odds_fetched'],
+            "odds_stored": result['odds_stored'],
+            "errors": result['errors'],
+            "success": result['odds_stored'] > 0,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to fetch live odds for match {match_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch live odds: {str(e)}",
+        )
+
+
+@router.post("/league/{league_id}/fetch", response_model=dict)
+def fetch_live_odds_for_league(
+    league_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Fetch live odds for all matches in a league from the Odds API.
+
+    This endpoint fetches fresh odds for all upcoming matches in a league.
+
+    Path Parameters:
+    - league_id: League ID
+
+    Returns:
+        Dictionary with fetch results and stored odds count
+
+    Raises:
+        HTTPException: If league not found or API key not configured
+    """
+    try:
+        # Verify league exists
+        league = db.query(League).filter(League.id == league_id).first()
+        if not league:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"League {league_id} not found",
+            )
+
+        # Get API key from environment
+        odds_api_key = os.getenv('ODDS_API_KEY')
+        if not odds_api_key:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Odds API not configured. Please set ODDS_API_KEY environment variable.",
+            )
+
+        # Initialize pipeline with odds API
+        pipeline = DataPipeline(
+            db_session=db,
+            odds_api_key=odds_api_key,
+        )
+
+        # Fetch and store odds for all league matches
+        logger.info(f"Fetching live odds for league {league_id}")
+        result = pipeline.fetch_and_store_odds(
+            league_code=league.name,
+        )
+
+        return {
+            "league_id": league_id,
+            "odds_fetched": result['odds_fetched'],
+            "odds_stored": result['odds_stored'],
+            "errors": result['errors'],
+            "success": result['odds_stored'] > 0,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to fetch live odds for league {league_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch live odds: {str(e)}",
         )

@@ -106,16 +106,29 @@
                             </div>
                         </div>
 
-                        <!-- Get Odds Button -->
-                        <button id="getOddsBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
-                            Get Betting Odds
-                        </button>
+                        <!-- Odds Buttons -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="getOddsBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                                Get Odds
+                            </button>
+                            <button id="fetchLiveOddsBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                                Fetch Live Odds
+                            </button>
+                        </div>
 
                         <!-- Odds Display -->
                         <div id="oddsDisplay" class="hidden space-y-4">
-                            <h3 class="font-bold text-gray-800">Betting Odds</h3>
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-bold text-gray-800">Betting Odds</h3>
+                                <button id="getBestOddsBtn" class="text-sm text-blue-600 hover:text-blue-800 font-semibold">
+                                    Show Best Odds
+                                </button>
+                            </div>
                             <div id="oddsList" class="space-y-2">
                                 <!-- Odds will be populated here -->
+                            </div>
+                            <div id="oddsComparison" class="hidden">
+                                <!-- Odds comparison table will be populated here -->
                             </div>
                         </div>
 
