@@ -95,6 +95,14 @@ async def favicon():
     return Response(status_code=204)
 
 
+# ===== CORS Preflight Handler =====
+
+@app.options("/{full_path:path}", include_in_schema=False)
+async def preflight_handler(full_path: str):
+    """Handle CORS preflight requests (OPTIONS)."""
+    return Response(status_code=200)
+
+
 # ===== Include Route Routers =====
 
 app.include_router(predictions.router)
