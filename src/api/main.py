@@ -53,13 +53,19 @@ app = FastAPI(
 # ===== Middleware Setup =====
 
 # CORS middleware for frontend integration
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000").split(",")
+# In development, allow all origins; in production, specify allowed origins
+if os.getenv("ENV", "development") == "development":
+    allow_origins = ["*"]
+else:
+    allow_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:8000").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=allow_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    max_age=3600,
 )
 
 # Trusted host middleware for security (only in production)
@@ -95,19 +101,26 @@ async def favicon():
     return Response(status_code=204)
 
 
-# ===== CORS Preflight Handler =====
-
-@app.options("/{full_path:path}", include_in_schema=False)
-async def preflight_handler(full_path: str):
-    """Handle CORS preflight requests (OPTIONS)."""
-    return Response(status_code=200)
-
-
 # ===== Include Route Routers =====
 
 app.include_router(predictions.router)
 app.include_router(odds.router)
 app.include_router(ml.router)
+
+
+# ===== CORS Preflight Handler (after routers) =====
+
+@app.options("/{full_path:path}", include_in_schema=False)
+async def preflight_handler(full_path: str):
+    """Handle CORS preflight requests (OPTIONS) for all paths."""
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "http://localhost:8000",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        }
+    )
 
 
 # ===== Custom Exception Handlers =====
