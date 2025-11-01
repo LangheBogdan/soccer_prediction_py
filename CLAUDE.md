@@ -262,6 +262,14 @@ The `/api/match/{id}/predict` endpoint loads the trained model, accepts match da
   - Injury and suspension information
   - 21 comprehensive unit tests
 
+- ✓ the-odds-api.com client (`src/clients/odds_api_client.py`)
+  - Specialized betting odds aggregation from 12+ bookmakers
+  - Support for 8 major European leagues + Champions League
+  - Historical odds tracking by date
+  - Event/match-specific odds queries
+  - Best odds identification across bookmakers
+  - 29 comprehensive unit tests
+
 - ✓ Data pipeline orchestration (`src/scraper/pipeline.py`)
   - Multi-source data collection (FBref, football-data.org, api-football.com)
   - Data transformation to ORM models
@@ -276,18 +284,20 @@ The `/api/match/{id}/predict` endpoint loads the trained model, accepts match da
   - Data pipeline feature flags
   - Retry and error handling configuration
 
-- ✓ **94 Total Passing Tests** (80 new tests in Phase 2 continuation)
+- ✓ **123 Total Passing Tests** (80 Phase 2 continuation + 29 OddsApiClient tests)
   - All tests use mocking to avoid external API calls
   - Full coverage of scraper, API clients, and pipeline
-  - Error handling and edge case testing
+  - Comprehensive error handling and edge case testing
 
 **Scraper/API Features:**
 - Respectful rate limiting for all sources
 - Comprehensive error handling (timeouts, 429 rate limits, bad requests)
-- Support for multiple data source formats
+- Support for multiple data source formats (FBref, football-data, api-football, the-odds-api)
 - Automatic deduplication and conflict resolution
 - Flexible data pipeline with configurable sources
 - Extensive logging for debugging and monitoring
+- 12+ bookmaker odds aggregation with best odds computation
+- Historical odds tracking and date-based queries
 
 **Pending:**
 - API endpoints implementation (Phase 3)
