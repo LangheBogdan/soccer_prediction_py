@@ -11,13 +11,21 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from src.db.config import init_db, drop_db, get_session
-from src.db.models import League, LeagueType, Team, Match, MatchStatus
+from src.db.models import League, LeagueType, Team, Match, MatchStatus, User
 
 
 def seed_initial_data():
     """Seed database with initial league data."""
     session = get_session()
     try:
+        # Create default user if doesn't exist
+        user = session.query(User).filter(User.id == 1).first()
+        if not user:
+            user = User(id=1, username="demo_user", email="demo@soccer-prediction.app")
+            session.add(user)
+            session.commit()
+            print("✓ Created default user (ID: 1)")
+
         # Check if data already exists
         if session.query(League).count() > 0:
             print("Database already contains league data. Skipping seed.")
